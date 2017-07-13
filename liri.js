@@ -3,8 +3,10 @@ var keys = require('./keys.js');
 var request = require("request");
 var Spotify = require('node-spotify-api');
 var fs = require('fs');
+var inquirer = require('inquirer');
 // Store all of the arguments in an array
 var nodeArgs = process.argv;
+var Twitter = require('twitter');
 
 
  
@@ -38,8 +40,8 @@ function spotifyStuff(song) {
 function myTweets(name){
 	var client = new Twitter(keys.twitterKeys);
 	 
-	var params = {screen_name: name};
-	client.get('statuses/user_timeline', params, function(error, tweets, response) {
+	
+	client.get('statuses/user_timeline', {screen_name: "@mariasaavedraTU", count: 20} , function(error, tweets, response) {
 	  if (!error) {
 	  
 	  	console.log("Twitter Search: " + name);
@@ -60,52 +62,29 @@ function myTweets(name){
 
 
 ////The Movie Section-------------------------
-//// Create an empty variable for holding the movie name
-var movieName = "";
-
-// Loop through all the words in the node argument
-// And do a little for-loop magic to handle the inclusion of "+"s
-for (var i = 2; i < nodeArgs.length; i++) {
-
-  if (i > 2 && i < nodeArgs.length) {
-
-    movieName = movieName + "+" + nodeArgs[i];
-
-  }
-
-  else {
-
-    movieName += nodeArgs[i];
-
-  }
-}
-
-if(!movieName) {
-       movieName = "Mr.Nobody";
-    };
-
-// Then run a request to the OMDB API with the movie specified
-var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=40e9cece";
-
-
-request(queryUrl, function(error, response, body) {
-
-  // If the request is successful
-  if (!error && response.statusCode === 200) {
-      
-
-        console.log("Title: " + JSON.parse(body).Title);
-        console.log("Year: " + JSON.parse(body).Year);
-        console.log("Country: " + JSON.parse(body).Country);
-        console.log("Language(s): " + JSON.parse(body).Language);
-        console.log("Actors: " + JSON.parse(body).Actors);
-        console.log("IMBD Rating: " + JSON.parse(body).imdbRating);
-        console.log("Rotten Tomatoes Rating: " + JSON.parse(body).Ratings[1].Value);
-        console.log("Plot: " + JSON.parse(body).Plot);
-          
-  }
-    
-});
+function movieThis(movie){
+	
+	console.log("OMDB Search: " + movie);
+	
+	//create a variable to hold search url for imdb
+	var queryUrl = "http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=" + keys.imdbKeys.key;
+	//start the imdb search
+	request(queryUrl, function(error, response, body) {
+		//if there is no error and the search is found place console log info
+	  	if (!error && response.statusCode === 200) {
+	  		console.log("Title: " + JSON.parse(body).Title);
+	   		console.log("Release Year: " + JSON.parse(body).Year);
+	   		console.log("IMDB Rating: " + JSON.parse(body).imdbRating);
+	   		console.log("Rotten Tomatoes Rating: " + JSON.parse(body).Ratings[1].Value);
+	   		console.log("Country: " + JSON.parse(body).Country);
+	   		console.log("Language: " + JSON.parse(body).Language);
+	   		console.log("Plot: " + JSON.parse(body).Plot);
+	   		console.log("Actors: " + JSON.parse(body).Actors);
+	  	}
+		
+		restart();
+	});
+};
 
 // fs -----------------------------------------------
 function doWhatItSays(){
@@ -116,7 +95,7 @@ function doWhatItSays(){
 	  console.log(data);
 	  var dataArr = data.split(",");
 	  var song = dataArr[1];
-	  spotifyThisSong(song);
+	  spotifyStuff(song);
 	});
 }
 
@@ -162,7 +141,7 @@ function inquire(){
 		  			var info = response.userName.trim()
 		  			if(info !=""){
 			  			myTweets(info);
-			  		} else { myTweets("AndrewDicer")}
+			  		} else { myTweets("mariasaavedraTU")}
 		  		})
 		  	}
 
@@ -178,10 +157,10 @@ function inquire(){
 		  		.then(function(response) {
 		  			var info = response.song.trim()
 		  			if(info !=""){
-			  			spotifyThisSong(info);
+			  			spotifyStuff(info);
 			  		} else { 
 			  			var song = "track:'The Sign' artist:'Ace of Base'";
-			  			spotifyThisSong(song)
+			  			spotifyStuff(song)
 			  		}
 		  		})
 		  	}
