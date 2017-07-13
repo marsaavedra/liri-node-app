@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/marsaavedra/liri-node-app#readme",
   "dependencies": {
-    "node-spotify-api": "^1.0.5"
+    "node-spotify-api": "^1.0.5",
+    "request": "^2.81.0",
+    "require": "^2.4.20",
+    "twitter": "^1.7.1"
   }
 }

@@ -8,53 +8,59 @@ var nodeArgs = process.argv;
 
 
  
-//spotify
-var spotify = new Spotify({
-  id: "9599e0d8ed024a898b95b742c689a2bd",
-  secret: "f119444bdb934e33b5e8385adddf131b"
-});
+//spotify----------------------------------------------
 
-var spotifyStuff = "";
+function spotifyStuff(song) {
+    var spotify = new Spotify (keys.spotifyKeys);
+    console.log("Song: " + song);
 
-for (var i = 2; i < nodeArgs.length; i++) {
+    spotify.search({ type: 'track', query: song }, function(err, data) {
 
-  if (i > 2 && i < nodeArgs.length) {
+        for (var i = 0; i < data.tracks.items.length; i++) {
 
-    spotifyStuff = spotifyStuff + "+" + nodeArgs[i];
+          console.log('artist(s) = ' + data.tracks.items[i].artists[0].name);
+          console.log('song title = ' + data.tracks.items[i].name);
+          console.log('preview = ' + data.tracks.items[i].preview_url);
+          console.log('album = ' + data.tracks.items[i].album.name);
+                    
+        };
+        if (err) {
+            return console.log('Error occurred: ' + err);
+        }
+        restart();
+ 
+    });
 
-  }
+};
 
-  else {
 
-    spotifyStuff += nodeArgs[i];
+//twitter -----------------------------------------
+function myTweets(name){
+	var client = new Twitter(keys.twitterKeys);
+	 
+	var params = {screen_name: name};
+	client.get('statuses/user_timeline', params, function(error, tweets, response) {
+	  if (!error) {
+	  
+	  	console.log("Twitter Search: " + name);
 
-  }
+	  	for (var i = 0; i < tweets.length && i < 20; i++){
+	  		var text = tweets[i].text;
+	  		var created = tweets[i].created_at;
+	    	console.log(created);
+	    	console.log(text);
+	    	
+		}
+		
+	  }
+	  else {console.log(error)};
+	});
 }
 
-var queryUrl = 'https://api.spotify.com/v1/search?q=' + spotifyStuff + '&limit=20&type=track';
-
-spotify.search({ type: 'track', query: 'All the Small Things' }, function(err, data) {
-var body = JSON.parse(body);  
-    for (var i = 0; i < body.tracks.items.length; i++) {
-     
-      console.log('artist(s) = ' + body.tracks.items[i].artists[0].name);
-      console.log('song title = ' + body.tracks.items[i].name);
-      console.log('preview = ' + body.tracks.items[i].preview_url);
-      console.log('album = ' + body.tracks.items[i].album.name);
-                    
-    };
-  if (err) {
-    return console.log('Error occurred: ' + err);
-  }
- 
-});
 
 
-
-
-
-//The Movie Section-------------------------
-// Create an empty variable for holding the movie name
+////The Movie Section-------------------------
+//// Create an empty variable for holding the movie name
 var movieName = "";
 
 // Loop through all the words in the node argument
@@ -82,38 +88,122 @@ if(!movieName) {
 var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=40e9cece";
 
 
-// This line is just to help us debug against the actual URL.
-//console.log(queryUrl);
-
 request(queryUrl, function(error, response, body) {
 
   // If the request is successful
   if (!error && response.statusCode === 200) {
-
-    // Parse the body of the site and recover just the imdbRating
-    // (Note: The syntax below for parsing isn't obvious. Just spend a few moments dissecting it).
       
 
-            var movie_data = {
-                "Title"                 : JSON.parse(body).Title,
-                "Released"              : JSON.parse(body).Released,
-                "Country"               : JSON.parse(body).Country,
-                "Language(s)"           : JSON.parse(body).Language,
-                "Actors"                : JSON.parse(body).Actors,
-                "IMDB Rating"           : JSON.parse(body).imdbRating,
-                "Rotten Tomatoes Rating": JSON.parse(body).tomatoRating,
-                "Rotten Tomatoes URL"   : JSON.parse(body).tomatoURL,
-                "Plot"                  : JSON.parse(body).Plot
-            }
         console.log("Title: " + JSON.parse(body).Title);
         console.log("Year: " + JSON.parse(body).Year);
         console.log("Country: " + JSON.parse(body).Country);
         console.log("Language(s): " + JSON.parse(body).Language);
         console.log("Actors: " + JSON.parse(body).Actors);
         console.log("IMBD Rating: " + JSON.parse(body).imdbRating);
-        console.log("Rotten Tomatoes Rating: " + JSON.parse(body).tomatoRating);
+        console.log("Rotten Tomatoes Rating: " + JSON.parse(body).Ratings[1].Value);
         console.log("Plot: " + JSON.parse(body).Plot);
           
   }
     
 });
+
+// fs -----------------------------------------------
+function doWhatItSays(){
+	fs.readFile("random.txt", "utf8", function(error, data) {
+		if (error) {
+	    return console.log(error);
+	  }
+	  console.log(data);
+	  var dataArr = data.split(",");
+	  var song = dataArr[1];
+	  spotifyThisSong(song);
+	});
+}
+
+//inquirer -----------------------------------------
+function restart(){
+	inquirer
+	  	.prompt([
+		    {
+			    type: "confirm",
+			    message: "Would you like to start over?",
+			    name: "confirm",
+			    default: true
+		    }
+		])
+		.then(function(response) {
+		    if (response.confirm) { inquire()}
+		    else { console.log("See you next time!")}
+	  	});
+}
+
+function inquire(){
+	inquirer
+	  	.prompt([
+		    {
+		      	type: "list",
+		      	message: "What would you like to do?",
+		      	choices: ["My Tweets", "Spotify This Song", "Movie This", "Do What It Says"],
+		      	name: "option1"
+		    },
+		 ])
+		 .then(function(response) {
+
+		  	if(response.option1 === "My Tweets"){
+		  	  inquirer
+		  		.prompt([
+		  			{
+				        type: "input",
+				    	message: "Enter Twitter User Name: ",
+				   	    name: "userName"
+		  			},
+		  		])
+		  		.then(function(response) {
+		  			var info = response.userName.trim()
+		  			if(info !=""){
+			  			myTweets(info);
+			  		} else { myTweets("AndrewDicer")}
+		  		})
+		  	}
+
+		  	else if(response.option1 === "Spotify This Song"){
+		  	  inquirer
+		  		.prompt([
+		  			{
+				        type: "input",
+				    	message: "Enter A Song Title: ",
+				   	    name: "song"
+		  			},
+		  		])
+		  		.then(function(response) {
+		  			var info = response.song.trim()
+		  			if(info !=""){
+			  			spotifyThisSong(info);
+			  		} else { 
+			  			var song = "track:'The Sign' artist:'Ace of Base'";
+			  			spotifyThisSong(song)
+			  		}
+		  		})
+		  	}
+
+		  	else if(response.option1 === "Movie This"){
+		  	  inquirer
+		  		.prompt([
+		  			{
+				        type: "input",
+				    	message: "Enter A Movie Title: ",
+				   	    name: "movie"
+		  			},
+		  		])
+		  		.then(function(response) {
+		  			var info = response.movie.trim()
+		  			if(info !=""){
+			  			movieThis(info);
+			  		} else { movieThis("Tron")}
+		  		})
+		  	}
+		  	else if(response.option1 === "Do What It Says"){ doWhatItSays()}	
+		 });
+}
+
+inquire();
